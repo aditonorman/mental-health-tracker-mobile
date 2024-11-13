@@ -1,5 +1,7 @@
-
 import 'package:flutter/material.dart';
+import 'package:mental_health_tracker/screens/login.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 import '../screens/moodentry_form.dart';
 
@@ -12,26 +14,48 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Material(
       // Specify the background color of the application theme.
       color: Theme.of(context).colorScheme.secondary,
-      // Round the card border.
-      borderRadius: BorderRadius.circular(12),
-
+      borderRadius: BorderRadius.circular(12), // Round the card border.
       child: InkWell(
         // Action when the card is pressed.
-        onTap: () {
+        onTap: () async {
           // Display the SnackBar message when the card is pressed.
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-                content: Text("You have pressed the ${item.name} button!")));
+            ..showSnackBar(
+              SnackBar(content: Text("You have pressed the ${item.name} button!")),
+            );
+
           if (item.name == "Add Mood") {
             Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MoodEntryFormPage(),
-                ));
+              context,
+              MaterialPageRoute(builder: (context) => MoodEntryFormPage()),
+            );
+          } else if (item.name == "Logout") {
+            final response = await request.logout(
+              // TODO: Change the URL to your Django app's URL. Don't forget to add the trailing slash (/) if needed.
+              "http://127.0.0.1:8000//auth/logout/",
+            );
+            String message = response["message"];
+            if (context.mounted) {
+              if (response['status']) {
+                String uname = response["username"];
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("$message Goodbye, $uname.")),
+                );
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(message)),
+                );
+              }
+            }
           }
         },
         // Container to store the Icon and Text

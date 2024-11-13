@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:mental_health_tracker/screens/menu.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 import '../widget/left_drawer.dart';
 
@@ -17,6 +22,8 @@ class _MoodEntryFormPageState extends State<MoodEntryFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+    
     return Scaffold(
       appBar: AppBar(
         title: const Center(
@@ -117,38 +124,39 @@ class _MoodEntryFormPageState extends State<MoodEntryFormPage> {
                     backgroundColor: WidgetStateProperty.all(
                         Theme.of(context).colorScheme.primary),
                   ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text('Mood successfully saved'),
-                            content: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Mood: $_mood'),
-                                  Text('Feelings: $_feelings'),
-                                  Text('Mood_intensity: $_moodIntensity'),
-                                  // TODO: Display other values
-                                ],
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                child: const Text('OK'),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  _formKey.currentState!.reset();
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    }
-                  },
+                  onPressed: () async {
+    if (_formKey.currentState!.validate()) {
+        // Send request to Django and wait for the response
+        // TODO: Change the URL to your Django app's URL. Don't forget to add the trailing slash (/) if needed.
+        final response = await request.postJson(
+            "http://127.0.0.1:8000//create-flutter/",
+            jsonEncode(<String, String>{
+                'mood': _mood,
+                'mood_intensity': _moodIntensity.toString(),
+                'feelings': _feelings,
+            // TODO: Adjust the fields with your project
+            }),
+        );
+        if (context.mounted) {
+            if (response['status'] == 'success') {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(
+                content: Text("New mood has saved successfully!"),
+                ));
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => MyHomePage()),
+                );
+            } else {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(
+                    content:
+                        Text("Something went wrong, please try again."),
+                ));
+            }
+        }
+    }
+},
                   child: const Text(
                     "Save",
                     style: TextStyle(color: Colors.white),

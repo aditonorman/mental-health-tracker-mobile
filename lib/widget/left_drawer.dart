@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mental_health_tracker/screens/list_moodentry.dart';
 import 'package:mental_health_tracker/screens/menu.dart';
 import 'package:mental_health_tracker/screens/moodentry_form.dart';
+
 // TODO: Import MoodEntryFormPage if it has already been created
 
 class LeftDrawer extends StatelessWidget {
@@ -49,6 +51,17 @@ class LeftDrawer extends StatelessWidget {
                 ));
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.add_reaction_rounded),
+              title: const Text('Mood List'),
+              onTap: () {
+                  // Route to the mood page
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MoodEntryPage()),
+                  );
+              },
+          ),
             ListTile(
             leading: const Icon(Icons.mood),
             title: const Text('Add Mood'),
